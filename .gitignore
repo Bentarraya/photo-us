@@ -1,0 +1,10 @@
+node_modules/
+dist/
+certs/
+.codegraph/
+.vercel/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

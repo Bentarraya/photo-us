@@ -1,0 +1,10 @@
+{
+  "name": "Dark Blue",
+  "defaultShots": 1,
+  "order": 1,
+  "slots": {
+    "1": [
+      { "x": 0, "y": 0, "w": 1200, "h": 1600 }
+    ]
+  }
+}

@@ -1,0 +1,154 @@
+[
+  {
+    "id": "dark-blue",
+    "name": "Dark Blue",
+    "order": 1,
+    "type": "image",
+    "allowedShots": [
+      1
+    ],
+    "defaultShots": 1,
+    "pngFiles": {
+      "1": "/frames/dark-blue/1.png"
+    },
+    "underlay": null,
+    "meta": {
+      "name": "Dark Blue",
+      "defaultShots": 1,
+      "order": 1,
+      "slots": {
+        "1": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 1200,
+            "h": 1600
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "polca-maroon",
+    "name": "Polca Maroon",
+    "order": 2,
+    "type": "image",
+    "allowedShots": [
+      2
+    ],
+    "defaultShots": 2,
+    "pngFiles": {
+      "2": "/frames/polca-maroon/2.png"
+    },
+    "underlay": null,
+    "meta": {
+      "name": "Polca Maroon",
+      "defaultShots": 2,
+      "order": 2,
+      "slots": {
+        "2": [
+          {
+            "x": 154,
+            "y": 184,
+            "w": 295,
+            "h": 428
+          },
+          {
+            "x": 153,
+            "y": 833,
+            "w": 296,
+            "h": 427
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "retro-film",
+    "name": "Retro Film",
+    "order": 3,
+    "type": "image",
+    "allowedShots": [
+      3
+    ],
+    "defaultShots": 3,
+    "pngFiles": {
+      "3": "/frames/retro-film/3.png"
+    },
+    "underlay": null,
+    "meta": {
+      "name": "Retro Film",
+      "defaultShots": 3,
+      "order": 3,
+      "slots": {
+        "3": [
+          {
+            "x": 55,
+            "y": 23,
+            "w": 436,
+            "h": 582
+          },
+          {
+            "x": 55,
+            "y": 607,
+            "w": 436,
+            "h": 582
+          },
+          {
+            "x": 55,
+            "y": 1204,
+            "w": 436,
+            "h": 582
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "basic-polca",
+    "name": "Basic Polca",
+    "order": 4,
+    "type": "image",
+    "allowedShots": [
+      4
+    ],
+    "defaultShots": 4,
+    "pngFiles": {
+      "4": "/frames/basic-polca/4.png"
+    },
+    "underlay": null,
+    "meta": {
+      "name": "Basic Polca",
+      "defaultShots": 4,
+      "order": 4,
+      "slots": {
+        "4": [
+          {
+            "x": 366,
+            "y": 166,
+            "w": 467,
+            "h": 355
+          },
+          {
+            "x": 366,
+            "y": 537,
+            "w": 467,
+            "h": 355
+          },
+          {
+            "x": 366,
+            "y": 908,
+            "w": 467,
+            "h": 355
+          },
+          {
+            "x": 366,
+            "y": 1279,
+            "w": 467,
+            "h": 355
+          }
+        ]
+      }
+    }
+  }
+]
