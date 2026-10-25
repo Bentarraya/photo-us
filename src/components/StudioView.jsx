@@ -427,7 +427,7 @@ export default function StudioView({
 
         {/* Frame Info */}
         <div className="nb-meta w-full max-w-3xl mx-auto py-2 text-center">
-          Frame: {frame?.name} • {shotsPerStrip} foto • {frame?.layout}
+          Frame: {frame?.name} • {shotsPerStrip} foto • {frame?.layout || `strip-${shotsPerStrip}`}
         </div>
       </main>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CameraView from './components/CameraView';
 import StudioView from './components/StudioView';
 import { FILTERS_REGISTRY } from './filters';
@@ -11,6 +11,8 @@ export default function App() {
   const [capturedPhotos, setCapturedPhotos] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showFramePickerModal, setShowFramePickerModal] = useState(false);
+  const infoDialogRef = useRef(null);
+  const infoCloseRef = useRef(null);
 
   // Frame states - load asynchronously
   const [allFrames, setAllFrames] = useState([]);
@@ -72,16 +74,56 @@ export default function App() {
     loadFrames();
   }, []);
 
-  // Close the guide with Escape while it is open.
+  // Focus the guide while it is open, trap Tab inside it, and close on Escape.
   useEffect(() => {
     if (!showInfoModal) return undefined;
 
+    const previouslyFocused = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      infoCloseRef.current?.focus({ preventScroll: true });
+    }, 0);
+
+    const getFocusable = () => Array.from(
+      infoDialogRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') setShowInfoModal(false);
+      if (event.key === 'Escape') {
+        setShowInfoModal(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!infoDialogRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused instanceof HTMLElement && document.contains(previouslyFocused)) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
   }, [showInfoModal]);
 
   // Persist filter selection
@@ -315,6 +357,7 @@ export default function App() {
       {showInfoModal && (
         <div className="nb-modal-overlay">
           <div
+            ref={infoDialogRef}
             className="nb-modal-card"
             role="dialog"
             aria-modal="true"
@@ -331,6 +374,7 @@ export default function App() {
                 CARA PAKAI PHOTO-US
               </h2>
               <button
+                ref={infoCloseRef}
                 type="button"
                 onClick={() => setShowInfoModal(false)}
                 className="nb-btn nb-btn-blue nb-btn-icon"

@@ -2,23 +2,69 @@
 // Supports both modal and bottom‑sheet presentation styles depending on the viewport width.
 // On desktop a centered portal is used; on phones a full‑screen bottom sheet is shown.
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Camera, Sparkles, X } from 'lucide-react';
 
 export default function FramePicker({ visible, onClose, onSelect, selectedFrameId, frames = [] }) {
-  // Quick escape and focus trap / return when closing
+  const dialogRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  // Escape close, focus trap, and return focus to the trigger when closing.
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      closeButtonRef.current?.focus({ preventScroll: true });
+    }, 0);
+
+    const getFocusable = () => Array.from(
+      dialogRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+
     const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!dialogRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
+
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKey);
+      if (previouslyFocused instanceof HTMLElement && document.contains(previouslyFocused)) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
   }, [visible, onClose]);
 
   return visible ? (
     <div className="nb-modal-overlay">
       <div
+        ref={dialogRef}
         className="nb-modal-card"
         role="dialog"
         aria-modal="true"
@@ -35,6 +81,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
             PILIH FRAME
           </h2>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="nb-btn nb-btn-icon nb-btn-blue"
