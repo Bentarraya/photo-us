@@ -1,6 +1,5 @@
 // FramePicker.jsx – a reusable frame picker UI component.
-// Supports both modal and bottom‑sheet presentation styles depending on the viewport width.
-// On desktop a centered portal is used; on phones a full‑screen bottom sheet is shown.
+// Renders as a centered inline dialog at every viewport width.
 
 import React, { useEffect, useRef } from 'react';
 import { Camera, Sparkles, X } from 'lucide-react';
@@ -8,6 +7,11 @@ import { Camera, Sparkles, X } from 'lucide-react';
 export default function FramePicker({ visible, onClose, onSelect, selectedFrameId, frames = [] }) {
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Escape close, focus trap, and return focus to the trigger when closing.
   useEffect(() => {
@@ -26,7 +30,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
 
     const handleKey = (e) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -59,7 +63,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
         previouslyFocused.focus({ preventScroll: true });
       }
     };
-  }, [visible, onClose]);
+  }, [visible]);
 
   return visible ? (
     <div className="nb-modal-overlay">
@@ -119,6 +123,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
                   }}
                   className={`nb-frame-card ${selected ? 'is-selected' : ''}`}
                   aria-pressed={selected}
+                  title={fr.name}
                 >
                   <div className="nb-frame-thumb">
                     <span className="absolute inset-0 flex items-center justify-center text-xl" aria-hidden="true">
@@ -135,7 +140,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
                     ) : null}
                   </div>
                   <div className="flex min-w-0 flex-col text-left">
-                    <span className="truncate font-sans text-sm font-bold">{fr.name}</span>
+                    <span className="nb-frame-name font-sans text-sm font-bold">{fr.name}</span>
                     <span className="nb-meta truncate">
                       {layoutLabel}
                       {fr.allowedShots ? ` • ${fr.allowedShots.join('/')}x` : ''}

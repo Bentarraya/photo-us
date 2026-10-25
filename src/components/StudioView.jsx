@@ -27,6 +27,7 @@ export default function StudioView({
 }) {
   const canvasRef = useRef(null);
   const fillInputRef = useRef(null);
+  const captionRef = useRef(null);
   const [caption, setCaption] = useState('PHOTO-US');
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -50,6 +51,15 @@ export default function StudioView({
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  // Keep the caption field tall enough to show all 30 characters on small screens.
+  useEffect(() => {
+    const element = captionRef.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    const borderHeight = element.offsetHeight - element.clientHeight;
+    element.style.height = `${element.scrollHeight + borderHeight}px`;
+  }, [caption]);
 
   // Load frame data
   useEffect(() => {
@@ -364,17 +374,23 @@ export default function StudioView({
           <div className="nb-card p-4">
             <div className="mb-3 flex items-center gap-2">
               <Type size={20} className="text-nb-pink" aria-hidden="true" />
-              <span className="nb-label">TEKS CAPTION</span>
+              <label htmlFor="studio-caption" className="nb-label">TEKS CAPTION</label>
             </div>
-            <input
-              type="text"
+            <textarea
+              ref={captionRef}
+              id="studio-caption"
+              rows={1}
               value={caption}
               onChange={(e) => setCaption(e.target.value.slice(0, 30))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               maxLength={30}
               placeholder="Masukkan caption (maks 30 karakter)"
+              aria-describedby="studio-caption-count"
               className="nb-input nb-caption-input"
             />
-            <p className="nb-meta mt-2 text-center">
+            <p id="studio-caption-count" className="nb-meta mt-2 text-center">
               {caption.length}/30 karakter
             </p>
           </div>
@@ -426,7 +442,7 @@ export default function StudioView({
         </div>
 
         {/* Frame Info */}
-        <div className="nb-meta w-full max-w-3xl mx-auto py-2 text-center">
+        <div className="nb-meta nb-frame-info w-full max-w-3xl mx-auto py-2 text-center">
           Frame: {frame?.name} • {shotsPerStrip} foto • {frame?.layout || `strip-${shotsPerStrip}`}
         </div>
       </main>

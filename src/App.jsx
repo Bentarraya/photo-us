@@ -257,21 +257,24 @@ export default function App() {
     );
   }
 
+  const LogoTag = currentMode === 'studio' ? 'button' : 'div';
+
   return (
     <div className="min-h-screen">
       <div className="app-container">
         {/* Header */}
         <header className="nb-header nb-card p-3 sm:p-4 mb-5">
           <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              className="nb-logo"
-              aria-label="Kembali ke kamera"
-              title="Kembali ke kamera"
-              onClick={handleRetake}
+            <LogoTag
+              type={currentMode === 'studio' ? 'button' : undefined}
+              className={`nb-logo${currentMode === 'studio' ? '' : ' nb-logo--static'}`}
+              aria-label={currentMode === 'studio' ? 'Kembali ke kamera' : undefined}
+              aria-hidden={currentMode === 'studio' ? undefined : 'true'}
+              title={currentMode === 'studio' ? 'Kembali ke kamera' : undefined}
+              onClick={currentMode === 'studio' ? () => handleRetake() : undefined}
             >
               <Camera size={22} strokeWidth={2.5} aria-hidden="true" />
-            </button>
+            </LogoTag>
             <div className="min-w-0">
               <h1 className="font-display flex items-center gap-1.5 text-base leading-none tracking-tight sm:text-xl">
                 PHOTO-US <span className="text-nb-pink anim-heart">❤</span>
