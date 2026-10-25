@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, RefreshCw, Volume2, VolumeX, Sparkles, Image as ImageIcon, Monitor, AlertTriangle, Dice5, HelpCircle, RotateCcw } from 'lucide-react';
+import { Camera, RefreshCw, Volume2, VolumeX, Sparkles, Image as ImageIcon, Monitor, AlertTriangle, Dice5, HelpCircle, RotateCcw, X } from 'lucide-react';
 import { startCameraStream, stopActiveStream } from '../camera/startCamera';
 import { FILTERS_REGISTRY, getFilterById } from '../filters';
 import { applyIphoneFilter } from '../filters/iphoneFilters';
@@ -827,24 +827,26 @@ export default function CameraView({
       )}
 
       {/* Action Controls */}
-      <div className="w-full flex flex-col sm:flex-row gap-3 mt-8 mb-6">
+      <div className="nb-actions">
         <button
+          type="button"
           onClick={() => startPhotoSession()}
           disabled={isCapturing || cameraState !== 'active'}
-          className="pixel-btn pixel-btn-primary pixel-btn-lg flex-1 font-bold text-sm min-h-[52px]"
+          className="nb-btn nb-btn-primary nb-btn-lg min-h-[52px] flex-1 text-sm font-bold"
         >
-          <Camera size={20} />
+          <Camera size={20} aria-hidden="true" />
           {isCapturing ? `MENGAMBIL FOTO (${currentShotIndex}/${totalShots})...` : `MULAI SESI FOTO (${totalShots}x)`}
         </button>
 
         <button
+          type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isCapturing}
-          className="pixel-btn pixel-btn-cyan text-xs min-h-[52px] px-6"
+          className="nb-btn nb-btn-teal nb-btn-lg min-h-[52px]"
           title="Upload foto dari galeri HP/PC"
         >
-          <ImageIcon size={18} />
-          <span className="xs:inline">UPLOAD</span>
+          <ImageIcon size={18} aria-hidden="true" />
+          <span>UPLOAD</span>
         </button>
         <input
           ref={fileInputRef}
@@ -858,34 +860,42 @@ export default function CameraView({
 
       {/* Debug Panel (?debug=1) */}
       {showDebug && (
-        <div className="w-full mt-4 p-3 bg-black text-green-400 font-mono text-[9px] border-2 border-green-500 text-left overflow-x-auto">
-          <div className="font-bold text-white mb-1">[DEBUG PANEL (?debug=1)]</div>
-          <div className="truncate">URL: {debugInfo.locationHref}</div>
-          <div>isSecureContext: {String(debugInfo.isSecureContext)}</div>
-          <div>navigator.mediaDevices: {String(debugInfo.hasMediaDevices)}</div>
-          <div>video dimensions: {debugInfo.videoWidth} x {debugInfo.videoHeight} (readyState: {debugInfo.readyState})</div>
-          <div>stream settings: {debugInfo.streamWidth} x {debugInfo.streamHeight} @ {debugInfo.streamFrameRate || 0}fps</div>
-          <div>last capture canvas: {debugInfo.captureWidth} x {debugInfo.captureHeight}</div>
-          <div>cameraState: {debugInfo.cameraState}</div>
+        <div className="nb-debug-panel">
+          <div className="mb-1 font-bold text-white">[DEBUG PANEL (?debug=1)]</div>
+          <div className="nb-debug-line">URL: {debugInfo.locationHref}</div>
+          <div className="nb-debug-line">isSecureContext: {String(debugInfo.isSecureContext)}</div>
+          <div className="nb-debug-line">navigator.mediaDevices: {String(debugInfo.hasMediaDevices)}</div>
+          <div className="nb-debug-line">video dimensions: {debugInfo.videoWidth} x {debugInfo.videoHeight} (readyState: {debugInfo.readyState})</div>
+          <div className="nb-debug-line">stream settings: {debugInfo.streamWidth} x {debugInfo.streamHeight} @ {debugInfo.streamFrameRate || 0}fps</div>
+          <div className="nb-debug-line">last capture canvas: {debugInfo.captureWidth} x {debugInfo.captureHeight}</div>
+          <div className="nb-debug-line">cameraState: {debugInfo.cameraState}</div>
           {debugInfo.cameraError && (
-            <div className="text-red-400 font-bold">ERROR: {debugInfo.cameraError} - {debugInfo.cameraErrorMessage}</div>
+            <div className="nb-debug-line font-bold text-red-400">ERROR: {debugInfo.cameraError} - {debugInfo.cameraErrorMessage}</div>
           )}
-          <div>activeFilter: {debugInfo.activeFilter}</div>
-          <div className="truncate">userAgent: {debugInfo.userAgent}</div>
+          <div className="nb-debug-line">activeFilter: {debugInfo.activeFilter}</div>
+          <div className="nb-debug-line">userAgent: {debugInfo.userAgent}</div>
         </div>
       )}
 
       {/* Dev Tuning Panel (?tune=1) */}
       {showTune && tuneParams && (
-        <div className="w-full mt-4 p-3 bg-zinc-900 text-white font-mono text-[10px] border-2 border-pink-500 text-left overflow-x-auto">
-          <div className="font-bold text-pink-400 mb-2 flex items-center justify-between">
+        <div className="nb-tune-panel">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 font-bold">
             <span>[TUNE PANEL (?tune=1)]</span>
-            <button onClick={() => setShowTune(false)} className="text-xs px-2 py-1 bg-zinc-700 hover:bg-zinc-600">TUTUP</button>
+            <button
+              type="button"
+              onClick={() => setShowTune(false)}
+              className="nb-btn nb-btn-icon nb-btn-blue"
+              aria-label="Tutup tune panel"
+              title="Tutup tune panel"
+            >
+              <X size={18} strokeWidth={3} aria-hidden="true" />
+            </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Filter:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Filter:</span>
                 <select
                   value={selectedFilterId}
                   onChange={(e) => {
@@ -893,7 +903,7 @@ export default function CameraView({
                     onSelectFilter(newId);
                     setTuneParams({ ...getIphoneFilterById(newId) });
                   }}
-                  className="bg-zinc-800 border border-zinc-600 px-2 py-1 text-[10px] rounded"
+                  className="nb-select min-w-0 flex-1"
                 >
                   {IPHONE_FILTERS_ORDER.map(id => (
                     <option key={id} value={id}>{IPHONE_FILTER_PRESETS[id].emoji} {IPHONE_FILTER_PRESETS[id].name}</option>
@@ -902,8 +912,8 @@ export default function CameraView({
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Exposure:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Exposure:</span>
                 <input
                   type="range"
                   min="-1"
@@ -911,14 +921,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.exposure}
                   onChange={(e) => setTuneParams({ ...tuneParams, exposure: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.exposure.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.exposure.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Contrast:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Contrast:</span>
                 <input
                   type="range"
                   min="0"
@@ -926,14 +936,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.contrast}
                   onChange={(e) => setTuneParams({ ...tuneParams, contrast: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.contrast.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.contrast.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Saturation:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Saturation:</span>
                 <input
                   type="range"
                   min="0"
@@ -941,14 +951,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.sat}
                   onChange={(e) => setTuneParams({ ...tuneParams, sat: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.sat.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.sat.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Vibrance:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Vibrance:</span>
                 <input
                   type="range"
                   min="0"
@@ -956,14 +966,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.vibrance}
                   onChange={(e) => setTuneParams({ ...tuneParams, vibrance: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.vibrance.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.vibrance.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Clarity:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Clarity:</span>
                 <input
                   type="range"
                   min="0"
@@ -971,14 +981,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.clarity}
                   onChange={(e) => setTuneParams({ ...tuneParams, clarity: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.clarity.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.clarity.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Gamma:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Gamma:</span>
                 <input
                   type="range"
                   min="0.5"
@@ -986,14 +996,14 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.gamma}
                   onChange={(e) => setTuneParams({ ...tuneParams, gamma: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.gamma.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.gamma.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Black Point:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Black Point:</span>
                 <input
                   type="range"
                   min="0"
@@ -1001,14 +1011,14 @@ export default function CameraView({
                   step="0.01"
                   value={tuneParams.black}
                   onChange={(e) => setTuneParams({ ...tuneParams, black: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.black.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.black.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">White Point:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">White Point:</span>
                 <input
                   type="range"
                   min="0.8"
@@ -1016,14 +1026,14 @@ export default function CameraView({
                   step="0.01"
                   value={tuneParams.white}
                   onChange={(e) => setTuneParams({ ...tuneParams, white: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.white.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.white.toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">WB R:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">WB R:</span>
                 <input
                   type="range"
                   min="0.8"
@@ -1031,14 +1041,14 @@ export default function CameraView({
                   step="0.01"
                   value={tuneParams.gain[0]}
                   onChange={(e) => setTuneParams({ ...tuneParams, gain: [parseFloat(e.target.value), tuneParams.gain[1], tuneParams.gain[2]] })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.gain[0].toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.gain[0].toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">WB G:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">WB G:</span>
                 <input
                   type="range"
                   min="0.8"
@@ -1046,14 +1056,14 @@ export default function CameraView({
                   step="0.01"
                   value={tuneParams.gain[1]}
                   onChange={(e) => setTuneParams({ ...tuneParams, gain: [tuneParams.gain[0], parseFloat(e.target.value), tuneParams.gain[2]] })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.gain[1].toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.gain[1].toFixed(2)}</span>
               </label>
             </div>
             <div>
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">WB B:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">WB B:</span>
                 <input
                   type="range"
                   min="0.8"
@@ -1061,25 +1071,25 @@ export default function CameraView({
                   step="0.01"
                   value={tuneParams.gain[2]}
                   onChange={(e) => setTuneParams({ ...tuneParams, gain: [tuneParams.gain[0], tuneParams.gain[1], parseFloat(e.target.value)] })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.gain[2].toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.gain[2].toFixed(2)}</span>
               </label>
             </div>
             <div className="sm:col-span-2">
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Mono:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Mono:</span>
                 <input
                   type="checkbox"
                   checked={tuneParams.mono}
                   onChange={(e) => setTuneParams({ ...tuneParams, mono: e.target.checked })}
-                  className="accent-pink-500"
+                  className="accent-pink-500 h-5 w-5"
                 />
               </label>
             </div>
             <div className="sm:col-span-2">
-              <label className="flex items-center gap-2">
-                <span className="w-24 text-zinc-300">Tint Amt:</span>
+              <label className="nb-tune-row flex items-center gap-2">
+                <span className="w-24 font-bold">Tint Amt:</span>
                 <input
                   type="range"
                   min="0"
@@ -1087,9 +1097,9 @@ export default function CameraView({
                   step="0.05"
                   value={tuneParams.tintAmt}
                   onChange={(e) => setTuneParams({ ...tuneParams, tintAmt: parseFloat(e.target.value) })}
-                  className="flex-1 accent-pink-500"
+                  className="nb-range flex-1"
                 />
-                <span className="w-12 text-right text-zinc-300">{tuneParams.tintAmt.toFixed(2)}</span>
+                <span className="nb-meta w-12 text-right">{tuneParams.tintAmt.toFixed(2)}</span>
               </label>
             </div>
           </div>
@@ -1099,7 +1109,7 @@ export default function CameraView({
                 // Apply tuned params as a temporary override
                 console.log('[TUNE] Current params:', tuneParams);
               }}
-              className="pixel-btn pixel-btn-primary text-xs px-3 py-1"
+              className="nb-btn nb-btn-primary text-xs"
             >
               LOG PARAMS
             </button>
@@ -1108,7 +1118,7 @@ export default function CameraView({
                 const filter = getIphoneFilterById(selectedFilterId);
                 setTuneParams({ ...filter });
               }}
-              className="pixel-btn text-xs px-3 py-1 bg-zinc-700 hover:bg-zinc-600"
+              className="nb-btn nb-btn-yellow text-xs"
             >
               RESET
             </button>
