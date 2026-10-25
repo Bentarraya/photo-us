@@ -234,33 +234,37 @@ export default function StudioView({
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="pixel-box p-4 mb-4 flex justify-between items-center bg-white shadow-md">
-        <div className="flex items-center gap-3">
+      <header className="nb-header nb-card mb-5 p-3 sm:p-4">
+        <div className="flex min-w-0 items-center gap-3">
           <button
+            type="button"
             onClick={handleRetakeAll}
-            className="pixel-btn pixel-btn-icon bg-red-500 min-h-[40px] min-w-[40px] text-white"
+            className="nb-btn nb-btn-danger nb-btn-icon min-h-[44px] min-w-[44px]"
             title="Ambil Ulang Semua"
+            aria-label="Ambil ulang semua"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} aria-hidden="true" />
           </button>
-          <div>
-            <h1 className="text-sm sm:text-lg font-bold tracking-wider flex items-center gap-1.5">
-              PHOTO-US <span className="text-pink-500 anim-heart">❤</span>
+          <div className="min-w-0">
+            <h1 className="font-display flex items-center gap-1.5 text-base leading-none tracking-tight sm:text-xl">
+              PHOTO-US <span className="text-nb-pink anim-heart">❤</span>
             </h1>
-            <p className="text-[10px] text-zinc-500 font-mono hidden sm:block">
+            <p className="nb-meta mt-1 hidden sm:block">
               EDIT &amp; SIMPAN HASIL
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
+            type="button"
             onClick={() => setShowFramePicker(true)}
-            className="pixel-btn pixel-btn-cyan text-[10px] py-2 px-3 flex items-center gap-1.5 min-h-[40px]"
+            className="nb-btn nb-btn-purple min-h-[44px]"
             title="Ganti Frame"
+            aria-label="Ganti frame"
           >
-            <Sparkles size={16} />
-            <span className="hidden sm:inline font-bold">FRAME</span>
+            <Sparkles size={16} aria-hidden="true" />
+            <span className="font-bold">FRAME</span>
           </button>
         </div>
       </header>
@@ -268,22 +272,26 @@ export default function StudioView({
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-4">
         {/* Frame Canvas */}
-        <div className="w-full max-w-3xl mx-auto mb-6">
-          <div className="pixel-box-lg bg-black relative overflow-hidden">
+        <div className="mb-6 w-full max-w-3xl mx-auto">
+          <div className="nb-preview p-2 sm:p-3">
             <div
-              className="relative w-full"
+              className="nb-preview-canvas w-full"
               style={{
                 aspectRatio: canvasSize.width > 0 && canvasSize.height > 0 ? canvasSize.width / canvasSize.height : 'auto'
               }}
             >
               <canvas
                 ref={canvasRef}
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 h-full w-full object-contain"
               />
               {!photos.length && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-zinc-950 z-10">
-                  <Camera size={52} className="mx-auto mb-3 text-pink-400 anim-heart" />
-                  <p className="text-xs font-mono text-zinc-300">Tidak ada foto</p>
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950">
+                  <div className="nb-empty-state text-white">
+                    <div className="nb-empty-icon">
+                      <Camera size={28} strokeWidth={2.5} aria-hidden="true" />
+                    </div>
+                    <p className="nb-meta text-white/70">Tidak ada foto</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -292,26 +300,33 @@ export default function StudioView({
 
         {/* Slot Indicators - Show filled/empty slots with retake option */}
         <div className="w-full max-w-3xl mx-auto mb-4">
-          <div className="flex justify-center gap-3 flex-wrap">
+          <div className="flex flex-wrap justify-center gap-3">
             {Array.from({ length: slotCount }).map((_, idx) => (
               <div
                 key={idx}
+                role="button"
+                tabIndex={0}
+                aria-label={photos[idx] ? `Retake foto #${idx + 1}` : `Isi slot #${idx + 1}`}
                 onClick={() => handleSlotClick(idx)}
-                className={`w-16 h-20 border-2 border-black flex items-center justify-center bg-zinc-200 overflow-hidden relative transition-all shadow-[2px_2px_0px_#000] ${
-                  photos[idx] ? 'cursor-pointer hover:ring-2 hover:ring-pink-500 hover:scale-105 active:translate-y-0.5' : 'cursor-pointer hover:border-pink-500 hover:bg-pink-50'
-                }`}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleSlotClick(idx);
+                  }
+                }}
+                className={`nb-thumb ${photos[idx] ? 'is-filled' : 'is-empty'}`}
                 title={photos[idx] ? `Retake foto #${idx + 1}` : `Tambah foto ke slot #${idx + 1}`}
               >
                 {photos[idx] ? (
                   <>
-                    <img src={photos[idx]} alt={`Slot ${idx+1}`} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                      <RotateCcw size={16} />
+                    <img src={photos[idx]} alt={`Slot ${idx+1}`} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100">
+                      <RotateCcw size={16} aria-hidden="true" />
                     </div>
                   </>
                 ) : (
-                  <span className="flex flex-col items-center gap-1 text-zinc-500 font-mono font-bold">
-                    <Plus size={16} className="text-pink-500" />
+                  <span className="flex flex-col items-center gap-1 font-mono font-bold text-nb-muted">
+                    <Plus size={16} className="text-nb-pink" aria-hidden="true" />
                     <span className="text-[10px]">#{idx + 1}</span>
                   </span>
                 )}
@@ -326,17 +341,18 @@ export default function StudioView({
             onChange={handleFillFiles}
             className="hidden"
           />
-          <div className="flex flex-col items-center gap-2 mt-2">
-            <p className="text-center text-[10px] text-zinc-500 font-mono">
+          <div className="mt-2 flex flex-col items-center gap-2">
+            <p className="nb-meta text-center">
               {photos.filter(Boolean).length} / {slotCount} slot terisi
             </p>
             {photos.filter(Boolean).length < slotCount && (
               <button
+                type="button"
                 onClick={handleAddPhotos}
-                className="pixel-btn pixel-btn-cyan text-[10px] px-3 py-2 min-h-[40px] flex items-center gap-1.5"
+                className="nb-btn nb-btn-teal min-h-[44px] text-xs"
                 title="Tambah foto ke slot yang masih kosong"
               >
-                <ImageIcon size={14} />
+                <ImageIcon size={16} aria-hidden="true" />
                 <span className="font-bold">TAMBAH FOTO DARI GALERI</span>
               </button>
             )}
@@ -344,11 +360,11 @@ export default function StudioView({
         </div>
 
         {/* Caption Editor */}
-        <div className="w-full max-w-3xl mx-auto mb-6">
-          <div className="pixel-box p-4 bg-white">
-            <div className="flex items-center gap-2 mb-3">
-              <Type size={20} className="text-pink-500" />
-              <span className="font-bold text-xs sm:text-sm text-zinc-800">TEKS CAPTION</span>
+        <div className="mb-6 w-full max-w-3xl mx-auto">
+          <div className="nb-card p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <Type size={20} className="text-nb-pink" aria-hidden="true" />
+              <span className="nb-label">TEKS CAPTION</span>
             </div>
             <input
               type="text"
@@ -356,69 +372,69 @@ export default function StudioView({
               onChange={(e) => setCaption(e.target.value.slice(0, 30))}
               maxLength={30}
               placeholder="Masukkan caption (maks 30 karakter)"
-              className="w-full pixel-box-sm p-3 text-center text-lg font-bold font-mono bg-white border-2 border-black focus:outline-none focus:ring-2 focus:ring-pink-500"
-              style={{ fontFamily: '"Silkscreen", monospace' }}
+              className="nb-input nb-caption-input"
             />
-            <p className="text-[10px] text-zinc-500 text-center mt-2 font-mono">
+            <p className="nb-meta mt-2 text-center">
               {caption.length}/30 karakter
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="w-full max-w-3xl mx-auto flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="nb-studio-actions w-full max-w-3xl mx-auto">
           <button
+            type="button"
             onClick={handleRetakeAll}
             disabled={isExporting}
-            className="pixel-btn pixel-btn-primary pixel-btn-lg flex-1 font-bold text-sm min-h-[52px]"
+            className="nb-btn nb-btn-primary nb-btn-lg min-h-[52px] flex-1 text-sm font-bold"
           >
-            <ArrowLeft size={20} />
-            <span className="flex items-center justify-center">AMBIL ULANG</span>
+            <ArrowLeft size={20} aria-hidden="true" />
+            <span>AMBIL ULANG</span>
           </button>
 
           <button
+            type="button"
             onClick={handleExport}
             disabled={isExporting || !photos.length}
-            className="pixel-btn pixel-btn-green pixel-btn-lg flex-1 font-bold text-sm min-h-[52px]"
+            className="nb-btn nb-btn-teal nb-btn-lg min-h-[52px] flex-1 text-sm font-bold"
           >
             {isExporting ? (
               <>
-                <Save size={20} className="anim-blink" />
+                <Save size={20} className="anim-blink" aria-hidden="true" />
                 <span>MENYIMPAN... {exportProgress}%</span>
               </>
             ) : (
               <>
-                <Download size={20} />
+                <Download size={20} aria-hidden="true" />
                 <span>SIMPAN FOTO</span>
               </>
             )}
           </button>
 
           <button
+            type="button"
             onClick={() => {
               playClickSound();
               onRetake(-1);
             }}
-            className="pixel-btn pixel-btn-cyan text-xs min-h-[52px] px-6"
+            className="nb-btn nb-btn-blue nb-btn-lg min-h-[52px]"
             title="Ambil foto tambahan"
           >
-            <Camera size={18} />
-            <span className="xs:inline">TAMBAH</span>
+            <Camera size={18} aria-hidden="true" />
+            <span>TAMBAH</span>
           </button>
         </div>
 
         {/* Frame Info */}
-        <div className="w-full max-w-3xl mx-auto text-center text-[10px] text-zinc-500 font-mono py-2">
+        <div className="nb-meta w-full max-w-3xl mx-auto py-2 text-center">
           Frame: {frame?.name} • {shotsPerStrip} foto • {frame?.layout}
         </div>
       </main>
 
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
-          <div className="pixel-box-lg px-6 py-3 bg-black text-white text-sm font-bold">
-            {showToast}
-          </div>
+        <div className="nb-toast animate-slide-up" role="status" aria-live="polite">
+          {showToast}
         </div>
       )}
 
