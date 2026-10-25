@@ -1,80 +1,167 @@
 // FramePicker.jsx – a reusable frame picker UI component.
-// Supports both modal and bottom‑sheet presentation styles depending on the viewport width.
-// On desktop a centered portal is used; on phones a full‑screen bottom sheet is shown.
+// Renders as a centered inline dialog at every viewport width.
 
-import React, { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Camera, Sparkles, X } from 'lucide-react';
 
 export default function FramePicker({ visible, onClose, onSelect, selectedFrameId, frames = [] }) {
-  // Quick escape and focus trap / return when closing
-  useEffect(() => {
-    if (!visible) return;
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [visible, onClose]);
+  const dialogRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const onCloseRef = useRef(onClose);
 
-  // Wrap content inside portal for full‑screen and for accessibility
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Escape close, focus trap, and return focus to the trigger when closing.
+  useEffect(() => {
+    if (!visible) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      closeButtonRef.current?.focus({ preventScroll: true });
+    }, 0);
+
+    const getFocusable = () => Array.from(
+      dialogRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!dialogRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKey);
+      if (previouslyFocused instanceof HTMLElement && document.contains(previouslyFocused)) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
+  }, [visible]);
+
   return visible ? (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="pixel-box-lg p-5 flex flex-col gap-4 max-w-sm w-full">
-        <div className="flex justify-between items-center border-b-2 border-black pb-2">
-          <span className="font-bold text-xs flex items-center gap-1">
-            <Sparkles size={16} className="text-yellow-500" /> PILIH FRAME
-          </span>
-          <button onClick={onClose} className="text-xs font-bold px-2 py-1 bg-zinc-200 border border-black hover:bg-zinc-300 min-h-[32px] min-w-[32px]">
-            ✕
+    <div className="nb-modal-overlay">
+      <div
+        ref={dialogRef}
+        className="nb-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="frame-picker-title"
+      >
+        <div className="nb-modal-header shrink-0">
+          <h2
+            id="frame-picker-title"
+            className="font-display flex items-center gap-2 text-sm leading-tight tracking-tight sm:text-base"
+          >
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-nb-ink bg-nb-yellow text-nb-ink">
+              <Sparkles size={15} aria-hidden="true" />
+            </span>
+            PILIH FRAME
+          </h2>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            className="nb-btn nb-btn-icon nb-btn-blue"
+            aria-label="Tutup pemilih frame"
+            title="Tutup pemilih frame"
+          >
+            <X size={18} strokeWidth={3} aria-hidden="true" />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-          {frames.map((fr) => {
-            // Resolve a thumbnail source from PNG assets if available
-            const thumbnailSrc = fr.pngFiles
-              ? Object.values(fr.pngFiles)[0]
-              : fr.thumbnail || null;
-            return (
-              <button
-                key={fr.id}
-                onClick={() => {
-                  onSelect(fr.id);
-                  onClose();
-                }}
-                className={
-                  `border-2 p-2 text-left flex items-center gap-2 transition-all min-h-[44px]`
-                  + (selectedFrameId === fr.id
-                    ? ' border-black bg-pink-100 shadow-[2px_2px_0px_#000]'
-                    : ' border-zinc-300 hover:border-zinc-400 bg-white hover:shadow-[2px_2px_0px_#000]')
-                }
-              >
-                <div className="relative w-10 h-12 shrink-0 overflow-hidden border border-black/20 bg-zinc-100 flex items-center justify-center rounded-[3px]">
-                  {thumbnailSrc ? (
-                    <img
-                      src={thumbnailSrc}
-                      alt={fr.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  ) : (
-                    <span className="text-xl">{fr.emoji || '🖼️'}</span>
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[11px] font-bold truncate">{fr.name}</span>
-                  <span className="text-[9px] text-zinc-500 uppercase">
-                    {fr.layout} {fr.allowedShots ? `(${fr.allowedShots.join('/')}x)` : ''}
-                    {fr.builtin && ' • Bawaan'}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+
+        {frames.length === 0 ? (
+          <div className="nb-frame-empty m-4">
+            <div className="nb-empty-icon">
+              <Camera size={26} strokeWidth={2.5} aria-hidden="true" />
+            </div>
+            <p className="nb-meta">Belum ada frame custom. Tambahkan PNG ke public/frames/.</p>
+          </div>
+        ) : (
+          <div className="m-4 grid max-h-[min(52vh,28rem)] min-h-0 auto-rows-min grid-cols-1 gap-3 overflow-y-auto overscroll-contain sm:grid-cols-2">
+            {frames.map((fr) => {
+              // Resolve a thumbnail source from PNG assets if available
+              const thumbnailSrc = fr.pngFiles
+                ? Object.values(fr.pngFiles)[0]
+                : fr.thumbnail || null;
+              const selected = selectedFrameId === fr.id;
+              const layoutLabel = fr.layout || `strip-${fr.allowedShots?.[0] || fr.defaultShots || 1}`;
+
+              return (
+                <button
+                  key={fr.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(fr.id);
+                    onClose();
+                  }}
+                  className={`nb-frame-card ${selected ? 'is-selected' : ''}`}
+                  aria-pressed={selected}
+                  title={fr.name}
+                >
+                  <div className="nb-frame-thumb">
+                    <span className="absolute inset-0 flex items-center justify-center text-xl" aria-hidden="true">
+                      {fr.emoji || '🖼️'}
+                    </span>
+                    {thumbnailSrc ? (
+                      <img
+                        src={thumbnailSrc}
+                        alt={fr.name}
+                        className="relative h-full w-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : null}
+                  </div>
+                  <div className="flex min-w-0 flex-col text-left">
+                    <span className="nb-frame-name font-sans text-sm font-bold">{fr.name}</span>
+                    <span className="nb-meta truncate">
+                      {layoutLabel}
+                      {fr.allowedShots ? ` • ${fr.allowedShots.join('/')}x` : ''}
+                      {fr.builtin ? ' • Bawaan' : ''}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="shrink-0 px-4 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="nb-btn nb-btn-primary nb-btn-lg w-full"
+          >
+            TUTUP
+          </button>
         </div>
-        <button onClick={onClose} className="pixel-btn pixel-btn-primary w-full text-xs mt-2 min-h-[44px]">
-          TUTUP
-        </button>
       </div>
     </div>
   ) : null;

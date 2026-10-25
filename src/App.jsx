@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CameraView from './components/CameraView';
 import StudioView from './components/StudioView';
 import { FILTERS_REGISTRY } from './filters';
 import { getAllFrames, getFrameById, getFramesForShots, getCustomFramesForShots } from './frames';
-import { Camera, Heart, HelpCircle, Dice5, Sparkles } from 'lucide-react';
+import { Camera, Heart, HelpCircle, Dice5, Sparkles, X } from 'lucide-react';
 import { playClickSound } from './utils/sound';
 
 export default function App() {
@@ -11,6 +11,8 @@ export default function App() {
   const [capturedPhotos, setCapturedPhotos] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showFramePickerModal, setShowFramePickerModal] = useState(false);
+  const infoDialogRef = useRef(null);
+  const infoCloseRef = useRef(null);
 
   // Frame states - load asynchronously
   const [allFrames, setAllFrames] = useState([]);
@@ -71,6 +73,58 @@ export default function App() {
     }
     loadFrames();
   }, []);
+
+  // Focus the guide while it is open, trap Tab inside it, and close on Escape.
+  useEffect(() => {
+    if (!showInfoModal) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      infoCloseRef.current?.focus({ preventScroll: true });
+    }, 0);
+
+    const getFocusable = () => Array.from(
+      infoDialogRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => !element.disabled && element.getClientRects().length > 0);
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setShowInfoModal(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!infoDialogRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused instanceof HTMLElement && document.contains(previouslyFocused)) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
+  }, [showInfoModal]);
 
   // Persist filter selection
   const handleSelectFilter = useCallback((id) => {
@@ -191,53 +245,66 @@ export default function App() {
   // Don't render until frames are loaded
   if (!framesLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="pixel-box p-8 max-w-md mx-auto">
-            <div className="text-4xl mb-4">📷</div>
-            <p className="font-mono text-sm text-zinc-600">Memuat frame...</p>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="nb-card w-full max-w-sm p-6 text-center">
+          <div className="nb-empty-icon mx-auto mb-4">
+            <Camera size={28} strokeWidth={2.5} aria-hidden="true" />
           </div>
+          <h1 className="font-display text-xl tracking-tight">PHOTO-US</h1>
+          <p className="nb-meta mt-1">Memuat frame...</p>
         </div>
       </div>
     );
   }
 
+  const LogoTag = currentMode === 'studio' ? 'button' : 'div';
+
   return (
     <div className="min-h-screen">
       <div className="app-container">
-        {/* Retro Pixel Header */}
-        <header className="pixel-box p-4 mb-6 flex justify-between items-center bg-white shadow-md">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={handleRetake}>
-            <div className="w-10 h-10 bg-pink-500 border-2 border-black flex items-center justify-center text-white shadow-[2px_2px_0px_#000]">
-              <Camera size={22} />
-            </div>
-            <div>
-              <h1 className="text-sm sm:text-lg font-bold tracking-wider flex items-center gap-1.5">
-                PHOTO-US <span className="text-pink-500 anim-heart">❤</span>
+        {/* Header */}
+        <header className="nb-header nb-card p-3 sm:p-4 mb-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <LogoTag
+              type={currentMode === 'studio' ? 'button' : undefined}
+              className={`nb-logo${currentMode === 'studio' ? '' : ' nb-logo--static'}`}
+              aria-label={currentMode === 'studio' ? 'Ambil ulang semua' : undefined}
+              aria-hidden={currentMode === 'studio' ? undefined : 'true'}
+              title={currentMode === 'studio' ? 'Ambil ulang semua' : undefined}
+              onClick={currentMode === 'studio' ? () => handleRetake() : undefined}
+            >
+              <Camera size={22} strokeWidth={2.5} aria-hidden="true" />
+            </LogoTag>
+            <div className="min-w-0">
+              <h1 className="font-display flex items-center gap-1.5 text-base leading-none tracking-tight sm:text-xl">
+                PHOTO-US <span className="text-nb-pink anim-heart">❤</span>
               </h1>
-              <p className="text-[10px] text-zinc-500 font-mono hidden sm:block">
-                PIXEL PHOTOBOOTH • WYSIWYG LIVE FILTERS & FRAMES
+              <p className="nb-meta mt-1 hidden sm:block">
+                NEO BRUTALIST PHOTOBOOTH • LIVE FILTERS & FRAMES
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={handleSurpriseAll}
-              className="pixel-btn text-[10px] py-2 px-3 pixel-btn-accent flex items-center gap-1.5 min-h-[40px]"
+              className="nb-btn nb-btn-yellow min-h-[44px] px-3 text-xs"
               title="Acak Filter & Frame (Surprise Me)"
+              aria-label="Acak filter dan frame"
             >
-              <Dice5 size={16} />
-              <span className="hidden sm:inline font-bold">ACAK</span>
+              <Dice5 size={18} />
+              <span className="hidden font-bold sm:inline">ACAK</span>
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 playClickSound();
                 setShowInfoModal(true);
               }}
-              className="pixel-btn pixel-btn-icon bg-yellow-300 min-h-[40px] min-w-[40px]"
+              className="nb-btn nb-btn-blue nb-btn-icon"
               title="Panduan"
+              aria-label="Panduan"
             >
               <HelpCircle size={18} />
             </button>
@@ -275,15 +342,15 @@ export default function App() {
           )}
         </main>
 
-        {/* Retro Pixel Footer */}
-        <footer className="mt-5 text-center text-[10px] text-zinc-500 font-mono py-2">
-          <div className="flex justify-center items-center gap-2">
+        {/* Footer */}
+        <footer className="nb-footer">
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
             <span>[PHOTO-US v2.0]</span>
-            <span>•</span>
+            <span aria-hidden="true">•</span>
             <span>{allFrames.length} FRAMES &amp; {FILTERS_REGISTRY.length} FILTERS</span>
-            <span>•</span>
-            <span className="flex items-center gap-1 text-pink-600">
-              MADE WITH <Heart size={10} className="fill-pink-500" />
+            <span aria-hidden="true">•</span>
+            <span className="flex items-center gap-1 text-nb-pink">
+              MADE WITH <Heart size={10} className="fill-nb-pink" />
             </span>
           </div>
         </footer>
@@ -291,37 +358,54 @@ export default function App() {
 
       {/* Info Modal */}
       {showInfoModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="pixel-box-lg p-5 max-w-sm w-full bg-white flex flex-col gap-3">
-            <div className="flex justify-between items-center border-b-2 border-black pb-2">
-              <span className="font-bold text-xs flex items-center gap-1">
-                <Sparkles size={16} className="text-yellow-500" /> CARA PAKAI PHOTO-US
-              </span>
-              <button
-                onClick={() => setShowInfoModal(false)}
-                className="text-xs font-bold px-2 py-1 bg-zinc-200 border border-black hover:bg-zinc-300 min-h-[36px] min-w-[36px]"
+        <div className="nb-modal-overlay">
+          <div
+            ref={infoDialogRef}
+            className="nb-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="info-modal-title"
+          >
+            <div className="nb-modal-header">
+              <h2
+                id="info-modal-title"
+                className="font-display flex items-center gap-2 text-xs leading-tight tracking-tight sm:text-sm md:text-base"
               >
-                ✕
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-nb-ink bg-nb-yellow text-nb-ink">
+                  <Sparkles size={15} aria-hidden="true" />
+                </span>
+                CARA PAKAI PHOTO-US
+              </h2>
+              <button
+                ref={infoCloseRef}
+                type="button"
+                onClick={() => setShowInfoModal(false)}
+                className="nb-btn nb-btn-blue nb-btn-icon"
+                aria-label="Tutup panduan"
+                title="Tutup panduan"
+              >
+                <X size={18} strokeWidth={3} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="text-xs font-mono flex flex-col gap-2 leading-relaxed">
-              <p>📷 <b>1. Buka Kamera:</b> Tekan "Mulai Kamera" di iPhone, Android, atau PC.</p>
-              <p>✨ <b>2. Pilih Filter:</b> Pilih dari 10 filter live (Original, Vivid, Dramatic, Mono, dll).</p>
-              <p>⏱️ <b>3. Sesi Foto:</b> Hitungan mundur 3 detik sebelum tiap foto dijepret.</p>
-              <p>🖼️ <b>4. Pilih Frame:</b> Ada {allFrames.length} frame custom PNG siap pakai.</p>
-              <p>💾 <b>5. Download:</b> Simpan hasil strip foto resolusi tinggi ke galeri HP atau PC!</p>
-            </div>
+            <div className="nb-modal-body flex flex-col gap-2">
+              <p className="nb-info-step text-sm leading-relaxed">📷 <b>1. Buka Kamera:</b> Tekan "Mulai Kamera" di iPhone, Android, atau PC.</p>
+              <p className="nb-info-step text-sm leading-relaxed">✨ <b>2. Pilih Filter:</b> Pilih dari 10 filter live (Original, Vivid, Dramatic, Mono, dll).</p>
+              <p className="nb-info-step text-sm leading-relaxed">⏱️ <b>3. Sesi Foto:</b> Hitungan mundur 3 detik sebelum tiap foto dijepret.</p>
+              <p className="nb-info-step text-sm leading-relaxed">🖼️ <b>4. Pilih Frame:</b> Ada {allFrames.length} frame custom PNG siap pakai.</p>
+              <p className="nb-info-step text-sm leading-relaxed">💾 <b>5. Download:</b> Simpan hasil strip foto resolusi tinggi ke galeri HP atau PC!</p>
 
-            <button
-              onClick={() => {
-                playClickSound();
-                setShowInfoModal(false);
-              }}
-              className="pixel-btn pixel-btn-primary w-full text-xs mt-2 min-h-[44px]"
-            >
-              MENGERTI, AYO FOTO!
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setShowInfoModal(false);
+                }}
+                className="nb-btn nb-btn-primary nb-btn-lg mt-1 w-full text-sm"
+              >
+                MENGERTI, AYO FOTO!
+              </button>
+            </div>
           </div>
         </div>
       )}
