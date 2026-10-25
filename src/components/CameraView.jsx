@@ -537,11 +537,19 @@ export default function CameraView({
 
   return (
     <div className="flex flex-col items-center w-full max-w-lg mx-auto">
-      {/* Top Retro Bar */}
-      <div className="w-full flex justify-between items-center mb-6 px-4 flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <span onClick={handleOpenFramePicker} className="pixel-badge shadow-sm cursor-pointer hover:bg-pink-100 active:translate-y-0.5">FRAME: {currentFrame?.name || layout.name}</span>
-        </div>
+      {/* Camera top bar */}
+      <div className="mb-5 flex w-full flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={handleOpenFramePicker}
+          className="nb-chip nb-chip--frame min-w-0 max-w-full"
+          aria-haspopup="dialog"
+          aria-label={`Ganti frame, frame aktif ${currentFrame?.name || layout.name}`}
+          title="Pilih frame"
+        >
+          <ImageIcon size={16} aria-hidden="true" />
+          <span className="truncate">FRAME: {currentFrame?.name || layout.name}</span>
+        </button>
 
         {/* Frame picker modal - uses shared FramePicker component */}
         <FramePicker
@@ -554,22 +562,22 @@ export default function CameraView({
 
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={toggleSound}
-            className="pixel-btn pixel-btn-icon min-w-[44px] min-h-[44px]"
+            className="nb-btn nb-btn-blue nb-btn-icon"
             title={soundOn ? 'Mute' : 'Unmute'}
+            aria-label={soundOn ? 'Matikan suara' : 'Nyalakan suara'}
           >
             {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
         </div>
       </div>
 
-      {/* Segmented Control for Shots Per Strip */}
-      <div className="w-full mb-6 px-4 py-2 bg-white border-2 border-black flex items-center justify-between shadow-[2px_2px_0px_#000] flex-wrap gap-3">
-        <span className="text-[10px] font-mono font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1">
-          <span>SHOTS PER STRIP:</span>
-        </span>
+      {/* Segmented control for shots per strip */}
+      <div className="nb-card nb-card-sm mb-5 flex w-full flex-wrap items-center justify-between gap-3 p-3">
+        <span className="nb-label flex items-center gap-1">SHOTS PER STRIP:</span>
 
-        <div className="inline-flex border-2 border-black bg-zinc-100 overflow-hidden shadow-xs flex-wrap" role="group" aria-label="Shots per strip selector">
+        <div className="nb-segmented" role="group" aria-label="Shots per strip selector">
           {[1, 2, 3, 4, 6].map((num) => {
             const isAllowed = allowedShots.includes(num);
             const isSelected = totalShots === num;
@@ -581,13 +589,7 @@ export default function CameraView({
                 disabled={!isAllowed || isCapturing}
                 onClick={() => (!isAllowed || isCapturing) ? null : handleSelectShots(num)}
                 aria-pressed={isSelected}
-                className={`min-w-[44px] min-h-[44px] text-xs font-mono font-bold flex items-center justify-center border-r-2 border-black last:border-r-0 transition-all select-none ${
-                  isSelected
-                    ? 'bg-pink-500 text-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.35)]'
-                    : isAllowed
-                    ? 'bg-white text-zinc-900 hover:bg-pink-100 active:bg-pink-200 cursor-pointer'
-                    : 'bg-zinc-200 text-zinc-400 opacity-30 cursor-not-allowed'
-                }`}
+                className={`nb-segment ${isSelected ? 'is-active' : ''} ${(!isAllowed || isCapturing) ? 'is-disabled' : ''}`}
                 title={
                   !isAllowed
                     ? `${num} Shots tidak didukung untuk frame ${currentFrame?.name || layout.name}`
@@ -601,8 +603,8 @@ export default function CameraView({
         </div>
       </div>
 
-      {/* Main Viewfinder Box */}
-      <div className="pixel-box-lg w-full relative bg-black aspect-[3/4] sm:aspect-[4/3] overflow-hidden flex items-center justify-center">
+      {/* Main camera stage */}
+      <div className="nb-camera relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden sm:aspect-[4/3]">
         {showFlash && <div className="flash-screen" />}
 
         {/* Background hidden Video Stream for processing */}
@@ -617,50 +619,57 @@ export default function CameraView({
         {/* Live Filtered Canvas (WYSIWYG) */}
         <canvas
           ref={canvasRef}
-          className={`w-full h-full object-cover ${cameraState === 'active' ? 'block' : 'hidden'} ${isMirrored ? 'mirror-x' : ''}`}
+          className={`h-full w-full object-cover ${cameraState === 'active' ? 'block' : 'hidden'} ${isMirrored ? 'mirror-x' : ''}`}
           style={isMirrored ? { transform: 'scaleX(-1)' } : {}}
         />
 
         {/* IDLE STATE: User Gesture Button */}
         {cameraState === 'idle' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-white bg-zinc-950 z-20">
-            <Camera size={52} className="mx-auto mb-3 text-pink-400 anim-heart" />
-            <h3 className="text-sm font-bold mb-1 tracking-wider">PHOTO-US KAMERA</h3>
-            <p className="text-[11px] font-mono mb-4 text-zinc-300 max-w-xs">
-              {retakeSlot !== null && retakeSlot !== undefined
-                ? `Nyalakan kamera untuk mengisi slot #${retakeSlot + 1}. Slot lain tetap tersimpan.`
-                : 'Sentuh tombol di bawah untuk membuka kamera di iPhone, Android, atau PC Anda.'}
-            </p>
-            <button
-              onClick={handleStartCamera}
-              className="pixel-btn pixel-btn-primary pixel-btn-lg text-xs"
-            >
-              <Camera size={18} /> MULAI KAMERA
-            </button>
+          <div className="nb-camera-state justify-center bg-zinc-950">
+            <div className="nb-empty-state text-white">
+              <div className="nb-empty-icon">
+                <Camera size={28} strokeWidth={2.5} aria-hidden="true" />
+              </div>
+              <h3 className="font-display text-base leading-tight tracking-tight">PHOTO-US KAMERA</h3>
+              <p className="max-w-xs font-sans text-xs leading-relaxed text-white/70">
+                {retakeSlot !== null && retakeSlot !== undefined
+                  ? `Nyalakan kamera untuk mengisi slot #${retakeSlot + 1}. Slot lain tetap tersimpan.`
+                  : 'Sentuh tombol di bawah untuk membuka kamera di iPhone, Android, atau PC Anda.'}
+              </p>
+              <button
+                type="button"
+                onClick={handleStartCamera}
+                className="nb-btn nb-btn-primary nb-btn-lg text-xs"
+              >
+                <Camera size={18} aria-hidden="true" /> MULAI KAMERA
+              </button>
+            </div>
           </div>
         )}
 
         {/* LOADING STATE */}
         {cameraState === 'loading' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-white bg-zinc-900/90 backdrop-blur-xs z-20">
-            <div className="countdown-badge text-2xl mb-3 anim-blink">⏳</div>
-            <p className="text-xs font-mono text-pink-200">Menunggu izin kamera dari browser...</p>
+          <div className="nb-camera-state justify-center bg-zinc-900/90 backdrop-blur-xs">
+            <div className="countdown-badge mb-3 anim-blink">⏳</div>
+            <p className="font-mono text-sm text-white/70">Menunggu izin kamera dari browser...</p>
           </div>
         )}
 
         {/* ERROR / DENIED / INSECURE CONTEXT STATE */}
         {cameraState === 'error' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-5 text-white bg-zinc-950 z-20 overflow-y-auto">
-            <AlertTriangle size={38} className="text-yellow-400 mb-2" />
-            <p className="text-xs font-bold text-red-400 mb-2">
-              {cameraErrorDetail?.message || 'Kamera gagal dimulai.'}
-            </p>
+          <div className="nb-camera-state justify-start bg-zinc-950">
+            <AlertTriangle size={38} className="mb-2 text-nb-yellow" aria-hidden="true" />
+            <div className="nb-alert mb-3 w-full max-w-sm text-left">
+              <p className="text-xs font-bold">
+                {cameraErrorDetail?.message || 'Kamera gagal dimulai.'}
+              </p>
+            </div>
 
             {/* Platform specific resolution instructions */}
-            <div className="text-[10px] font-mono text-zinc-300 bg-zinc-900 p-3 border border-zinc-700 text-left mb-3 max-w-xs">
+            <div className="nb-code-card mb-3 w-full max-w-sm text-left">
               {cameraErrorDetail?.reason === 'denied' && (
                 <>
-                  <p className="font-bold text-yellow-300 mb-1">Cara mengaktifkan kembali:</p>
+                  <p className="mb-1 font-bold">Cara mengaktifkan kembali:</p>
                   <p className="mb-1">📱 <b>iPhone / Safari:</b> Masuk ke <i>Settings → Safari → Camera</i> ubah ke "Allow", atau klik logo <b>aA</b> di address bar → <i>Website Settings → Camera → Allow</i>.</p>
                   <p>💻 <b>Mac Safari:</b> Buka <i>Safari → Settings → Websites → Camera</i> ubah situs ini ke "Allow".</p>
                 </>
@@ -676,16 +685,18 @@ export default function CameraView({
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               <button
+                type="button"
                 onClick={handleStartCamera}
-                className="pixel-btn pixel-btn-primary text-xs"
+                className="nb-btn nb-btn-primary text-xs"
               >
                 COBA LAGI
               </button>
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="pixel-btn pixel-btn-cyan text-xs"
+                className="nb-btn nb-btn-teal text-xs"
               >
                 UPLOAD FOTO
               </button>
@@ -693,15 +704,15 @@ export default function CameraView({
           </div>
         )}
 
-        {/* Viewfinder Retro Crosshair overlay */}
-        <div className="absolute inset-0 pointer-events-none border-[3px] border-white/20 m-2 flex flex-col justify-between p-2">
-          <div className="flex justify-between items-center text-[9px] text-white/70 font-mono">
+        {/* Viewfinder HUD */}
+        <div className="nb-camera-hud">
+          <div className="flex items-center justify-between font-mono text-[9px] text-white/70">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-red-500 inline-block anim-blink" /> REC
+              <span className="anim-blink inline-block h-2 w-2 rounded-full bg-red-500" /> REC
             </span>
             <span>FILTER: {currentFilter.name.toUpperCase()}</span>
           </div>
-          <div className="flex justify-between text-[9px] text-white/50 font-mono">
+          <div className="flex justify-between font-mono text-[9px] text-white/50">
             <span>[+] FOCUS</span>
             <span>BATTERY: 99%</span>
           </div>
@@ -709,37 +720,42 @@ export default function CameraView({
 
         {/* Countdown Overlay */}
         {countdown && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-30">
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
             <div className="countdown-badge">{countdown}</div>
-            <div className="text-white text-xs font-mono mt-2 bg-black/70 px-3 py-1 border border-white">
-              POSE {currentShotIndex} DARI {totalShots}!
+            <div className="mt-3 rounded-xl border-2 border-white/20 bg-black/70 p-2">
+              <span className="nb-pill">POSE {currentShotIndex} DARI {totalShots}!</span>
             </div>
           </div>
         )}
 
         {/* Banner between shots */}
         {isCapturing && !countdown && (
-          <div className="absolute top-4 inset-x-4 bg-pink-500 text-white text-center py-1 text-xs font-bold border-2 border-black z-20">
+          <div className="nb-camera-banner absolute inset-x-4 top-4 z-20">
             BERSIAP UNTUK FOTO KE-{currentShotIndex} / {totalShots}...
           </div>
         )}
 
         {/* Bottom floating camera controls */}
         {cameraState === 'active' && (
-          <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center z-10 pointer-events-auto">
+          <div className="pointer-events-auto absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between">
             <button
+              type="button"
               onClick={toggleCameraFacing}
               disabled={isCapturing}
-              className="pixel-btn pixel-btn-icon bg-white/90 hover:bg-white text-black min-h-[44px] min-w-[44px]"
+              className="nb-btn nb-btn-icon"
               title="Ganti Kamera Depan/Belakang"
+              aria-label="Ganti kamera depan atau belakang"
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={18} aria-hidden="true" />
             </button>
 
             <button
+              type="button"
               onClick={() => setIsMirrored(!isMirrored)}
               disabled={isCapturing}
-              className={`pixel-btn text-[10px] px-3 py-2 min-h-[44px] ${isMirrored ? 'pixel-btn-accent' : 'bg-white/90'}`}
+              className={`nb-btn min-h-[44px] px-3 ${isMirrored ? 'nb-btn-primary' : ''}`}
+              aria-pressed={isMirrored}
+              aria-label={isMirrored ? 'Matikan mirror' : 'Nyalakan mirror'}
             >
               {isMirrored ? 'MIRROR: ON' : 'MIRROR: OFF'}
             </button>
@@ -748,24 +764,24 @@ export default function CameraView({
       </div>
 
       {/* FILTER SELECTOR: Horizontally scrollable chip row */}
-      <div className="w-full mt-8">
-        <div className="text-[15px] font-bold mb-2 flex justify-between items-center px-1">
-          <span>PILIH FILTER LIVE ({FILTERS_REGISTRY.length}):</span>
-          <span className="text-pink-600 font-mono text-[13px] bg-pink-50 px-1.5 py-0.5 border border-pink-200">{currentFilter.name}</span>
+      <div className="mt-7 w-full">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
+          <span className="nb-label">PILIH FILTER LIVE ({FILTERS_REGISTRY.length}):</span>
+          <span className="nb-pill">{currentFilter.name}</span>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-thin px-1">
+        <div className="nb-filter-rail px-1">
           {FILTERS_REGISTRY.map((filt) => (
             <button
               key={filt.id}
+              type="button"
               onClick={() => {
                 playClickSound();
                 onSelectFilter(filt.id);
               }}
-              className={`pixel-btn text-[10px] px-3 py-2 flex items-center gap-2 shrink-0 min-h-[46px] ${
-                selectedFilterId === filt.id ? 'pixel-btn-primary' : 'bg-white'
-              }`}
+              aria-pressed={selectedFilterId === filt.id}
+              className={`nb-chip shrink-0 ${selectedFilterId === filt.id ? 'is-active' : ''}`}
             >
-              <span className="text-sm">{filt.emoji}</span>
+              <span className="text-sm" aria-hidden="true">{filt.emoji}</span>
               <span className="whitespace-nowrap font-bold">{filt.name}</span>
             </button>
           ))}
@@ -774,29 +790,36 @@ export default function CameraView({
 
       {/* Captured shots progress preview row */}
       {totalShots >= 1 && (
-        <div className="flex gap-3 mt-6 w-full justify-center flex-wrap px-2">
+        <div className="mt-5 flex w-full flex-wrap justify-center gap-3 px-2">
           {Array.from({ length: totalShots }).map((_, idx) => (
             <div
               key={idx}
+              role="button"
+              tabIndex={0}
+              aria-label={capturedShots[idx] ? `Retake foto #${idx + 1}` : `Isi slot #${idx + 1}`}
               onClick={() => handleRetakeSingleSlot(idx)}
-              className={`w-14 h-16 border-2 border-black flex items-center justify-center bg-zinc-200 overflow-hidden relative transition-all shadow-[2px_2px_0px_#000] ${
-                currentShotIndex === idx + 1 && isCapturing ? 'ring-2 ring-pink-500 animate-pulse' : ''
-              } ${
-                capturedShots[idx] && !isCapturing ? 'cursor-pointer hover:ring-2 hover:ring-pink-500 hover:scale-105 active:translate-y-0.5' : ''
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleRetakeSingleSlot(idx);
+                }
+              }}
+              className={`nb-thumb ${capturedShots[idx] ? 'is-filled' : 'is-empty'} ${
+                currentShotIndex === idx + 1 && isCapturing ? 'is-active' : ''
               }`}
               title={capturedShots[idx] && !isCapturing ? `Klik untuk retake foto #${idx + 1}` : `Slot #${idx + 1}`}
             >
               {capturedShots[idx] ? (
                 <>
-                  <img src={capturedShots[idx]} alt={`Shot ${idx+1}`} className="w-full h-full object-cover" />
+                  <img src={capturedShots[idx]} alt={`Shot ${idx+1}`} className="h-full w-full object-cover" />
                   {!isCapturing && (
-                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                      <RotateCcw size={16} />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100">
+                      <RotateCcw size={16} aria-hidden="true" />
                     </div>
                   )}
                 </>
               ) : (
-                <span className="text-[10px] text-zinc-500 font-mono font-bold">#{idx + 1}</span>
+                <span className="font-mono text-[10px] font-bold text-nb-muted">#{idx + 1}</span>
               )}
             </div>
           ))}
