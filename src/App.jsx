@@ -268,9 +268,9 @@ export default function App() {
             <LogoTag
               type={currentMode === 'studio' ? 'button' : undefined}
               className={`nb-logo${currentMode === 'studio' ? '' : ' nb-logo--static'}`}
-              aria-label={currentMode === 'studio' ? 'Kembali ke kamera' : undefined}
+              aria-label={currentMode === 'studio' ? 'Ambil ulang semua' : undefined}
               aria-hidden={currentMode === 'studio' ? undefined : 'true'}
-              title={currentMode === 'studio' ? 'Kembali ke kamera' : undefined}
+              title={currentMode === 'studio' ? 'Ambil ulang semua' : undefined}
               onClick={currentMode === 'studio' ? () => handleRetake() : undefined}
             >
               <Camera size={22} strokeWidth={2.5} aria-hidden="true" />

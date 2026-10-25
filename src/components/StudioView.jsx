@@ -52,13 +52,48 @@ export default function StudioView({
     }
   }, [showToast]);
 
-  // Keep the caption field tall enough to show all 30 characters on small screens.
+  // Keep the caption field tall enough to show all 30 characters as the
+  // viewport width changes (including orientation changes).
   useEffect(() => {
     const element = captionRef.current;
-    if (!element) return;
-    element.style.height = 'auto';
-    const borderHeight = element.offsetHeight - element.clientHeight;
-    element.style.height = `${element.scrollHeight + borderHeight}px`;
+    if (!element) return undefined;
+
+    let lastWidth = Math.round(element.clientWidth);
+    let cancelled = false;
+
+    const resize = () => {
+      if (cancelled) return;
+      lastWidth = Math.round(element.clientWidth);
+      element.style.height = 'auto';
+      const borderHeight = element.offsetHeight - element.clientHeight;
+      element.style.height = `${element.scrollHeight + borderHeight}px`;
+    };
+
+    resize();
+
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver((entries) => {
+        const width = Math.round(entries[0]?.contentRect.width || 0);
+        if (width === lastWidth) return;
+        resize();
+      })
+      : null;
+    observer?.observe(element);
+
+    window.addEventListener('resize', resize);
+    const visualViewport = window.visualViewport;
+    visualViewport?.addEventListener('resize', resize);
+
+    document.fonts?.ready.then(() => {
+      if (!cancelled) resize();
+    });
+
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      window.removeEventListener('resize', resize);
+      visualViewport?.removeEventListener('resize', resize);
+    };
   }, [caption]);
 
   // Load frame data

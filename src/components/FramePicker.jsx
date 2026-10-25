@@ -104,7 +104,7 @@ export default function FramePicker({ visible, onClose, onSelect, selectedFrameI
             <p className="nb-meta">Belum ada frame custom. Tambahkan PNG ke public/frames/.</p>
           </div>
         ) : (
-          <div className="m-4 grid max-h-[min(52vh,28rem)] min-h-0 grid-cols-1 gap-3 overflow-y-auto overscroll-contain sm:grid-cols-2">
+          <div className="m-4 grid max-h-[min(52vh,28rem)] min-h-0 auto-rows-min grid-cols-1 gap-3 overflow-y-auto overscroll-contain sm:grid-cols-2">
             {frames.map((fr) => {
               // Resolve a thumbnail source from PNG assets if available
               const thumbnailSrc = fr.pngFiles
