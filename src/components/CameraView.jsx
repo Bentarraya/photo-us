@@ -31,7 +31,7 @@ function photosEqual(a, b) {
 // preview canvas, so a 480px preview can never limit export quality.
 const PREVIEW_MAX_HEIGHT = 1920;
 const CAPTURE_MAX_HEIGHT = 1920; // Guard against huge 4K frames on mobile
-const PREVIEW_TARGET_ASPECT = 4 / 5; // Portrait 3:4
+const PREVIEW_TARGET_ASPECT = 4 / 5; // Portrait 4:5 - must match the stage aspect and the capture canvas
 
 // Center-crop a video frame to the portrait 3:4 aspect used by every slot.
 function getPortraitCrop(vw, vh) {
@@ -71,8 +71,10 @@ export default function CameraView({
   selectedFrameId,
   allFrames = [],
   retakeSlot = null,
+  continueSession = false,
   existingPhotos = [],
-  onRetakeSlotHandled
+  onRetakeSlotHandled,
+  onContinueSessionHandled
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -80,6 +82,7 @@ export default function CameraView({
   const fileInputRef = useRef(null);
   const captureCanvasRef = useRef(null);
   const handledRetakeRef = useRef(null);
+  const handledContinueRef = useRef(false);
 
   // Camera states
   const [cameraState, setCameraState] = useState('idle'); // 'idle' | 'loading' | 'active' | 'error'
@@ -112,6 +115,11 @@ export default function CameraView({
   const allowedShots = currentFrame?.allowedShots || layout?.allowedShots || [1, 2, 3, 4, 6];
   const [localShots, setLocalShots] = useState(shotsPerStrip || layout?.count || 4);
   const totalShots = shotsPerStrip ?? localShots;
+  // How many slots are still empty - used by the "continue session" copy.
+  const emptySlotCount = Math.max(
+    0,
+    totalShots - (capturedShots || []).slice(0, totalShots).filter(Boolean).length
+  );
 
   // Keep local slots in sync with the photos owned by App. This is what makes
   // "fill an empty slot" / "retake one slot" preserve all the other photos.
@@ -187,6 +195,23 @@ export default function CameraView({
     handleRetakeSingleSlot(retakeSlot);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retakeSlot, cameraState, isCapturing]);
+
+  // "TAMBAH" from the studio: continue the existing strip. startPhotoSession()
+  // with no target already walks the empty slots and leaves filled ones alone,
+  // so all we have to do is kick it off once the camera is live.
+  useEffect(() => {
+    if (!continueSession) {
+      handledContinueRef.current = false;
+      return;
+    }
+    if (cameraState !== 'active' || isCapturing) return;
+    if (handledContinueRef.current) return;
+
+    handledContinueRef.current = true;
+    if (onContinueSessionHandled) onContinueSessionHandled();
+    startPhotoSession(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continueSession, cameraState, isCapturing]);
 
   // Update debug stats periodically
   useEffect(() => {
@@ -267,9 +292,11 @@ export default function CameraView({
         const vw = video.videoWidth;
         const vh = video.videoHeight;
 
-        // Target portrait 3:4 aspect ratio for vertical frames.
-        // Preview resolution stays small; capture uses its own canvas.
-        const canvasH = Math.min(vh, PREVIEW_MAX_HEIGHT);
+        // Portrait aspect ratio matching the saved photo (4:5).
+        // Size the preview from the crop height, not the raw video height,
+        // otherwise portrait streams get upscaled for nothing.
+        const crop = getPortraitCrop(vw, vh);
+        const canvasH = Math.min(crop.sHeight, PREVIEW_MAX_HEIGHT);
         const canvasW = Math.round(canvasH * PREVIEW_TARGET_ASPECT);
 
         if (canvas.width !== canvasW || canvas.height !== canvasH) {
@@ -277,7 +304,6 @@ export default function CameraView({
           canvas.height = canvasH;
         }
 
-        const crop = getPortraitCrop(vw, vh);
         const activePreset = showTune && tuneParams ? tuneParams : selectedFilterId;
         try {
           applyIphoneFilter(canvas, video, activePreset, {
@@ -604,7 +630,7 @@ export default function CameraView({
       </div>
 
       {/* Main camera stage */}
-      <div className="nb-camera relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden sm:aspect-[4/3]">
+      <div className="nb-camera relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden">
         {showFlash && <div className="flash-screen" />}
 
         {/* Background hidden Video Stream for processing */}
@@ -634,7 +660,9 @@ export default function CameraView({
               <p className="max-w-xs font-sans text-xs leading-relaxed text-white/70">
                 {retakeSlot !== null && retakeSlot !== undefined
                   ? `Nyalakan kamera untuk mengisi slot #${retakeSlot + 1}. Slot lain tetap tersimpan.`
-                  : 'Sentuh tombol di bawah untuk membuka kamera di iPhone, Android, atau PC Anda.'}
+                  : continueSession && emptySlotCount > 0
+                    ? `Lanjutkan sesi: ${emptySlotCount} slot masih kosong. Foto yang sudah ada tetap tersimpan.`
+                    : 'Sentuh tombol di bawah untuk membuka kamera di iPhone, Android, atau PC Anda.'}
               </p>
               <button
                 type="button"
@@ -835,7 +863,11 @@ export default function CameraView({
           className="nb-btn nb-btn-primary nb-btn-lg min-h-[52px] flex-1 text-sm font-bold"
         >
           <Camera size={20} aria-hidden="true" />
-          {isCapturing ? `MENGAMBIL FOTO (${currentShotIndex}/${totalShots})...` : `MULAI SESI FOTO (${totalShots}x)`}
+          {isCapturing
+            ? `MENGAMBIL FOTO (${currentShotIndex}/${totalShots})...`
+            : continueSession && emptySlotCount > 0
+              ? `LANJUTKAN SESI (${emptySlotCount}x)`
+              : `MULAI SESI FOTO (${totalShots}x)`}
         </button>
 
         <button

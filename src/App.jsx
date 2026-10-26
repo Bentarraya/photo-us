@@ -188,11 +188,15 @@ export default function App() {
   const handlePhotosCaptured = useCallback((photos) => {
     setCapturedPhotos(photos);
     setRetakeSlot(null);
+    setContinueSession(false);
     setCurrentMode('studio');
   }, []);
 
   // Track which slot to retake (for single-slot retake)
   const [retakeSlot, setRetakeSlot] = useState(null);
+  // When true, CameraView opens in "keep what we have, fill the empty slots"
+  // mode instead of starting a brand new strip.
+  const [continueSession, setContinueSession] = useState(false);
 
   // Retake or new session
   const handleRetake = useCallback((slotIdx = -1) => {
@@ -201,6 +205,7 @@ export default function App() {
       // Retake all - go back to camera mode
       setCapturedPhotos([]);
       setRetakeSlot(null);
+      setContinueSession(false);
       setCurrentMode('camera');
     } else if (slotIdx >= 0) {
       // Retake/fill a single slot: keep every other photo and let CameraView
@@ -213,9 +218,34 @@ export default function App() {
         return next;
       });
       setRetakeSlot(slotIdx);
+      setContinueSession(false);
       setCurrentMode('camera');
     }
   }, [shotsPerStrip]);
+
+  // "TAMBAH" from the studio: keep the photos we already have and continue the
+  // session into whatever slots are still empty. Deliberately does NOT clear
+  // capturedPhotos (that is what "AMBIL ULANG" is for).
+  const handleAddPhotos = useCallback(() => {
+    const filled = capturedPhotos.filter(Boolean);
+    if (filled.length === 0) {
+      // Nothing to continue from - a normal session is the right behaviour.
+      handleRetake(-1);
+      return;
+    }
+    if (filled.length >= shotsPerStrip) return; // no empty slot left
+
+    setCapturedPhotos(() => {
+      const next = new Array(shotsPerStrip).fill(null);
+      capturedPhotos.forEach((photo, idx) => {
+        if (idx < next.length) next[idx] = photo;
+      });
+      return next;
+    });
+    setRetakeSlot(null);
+    setContinueSession(true);
+    setCurrentMode('camera');
+  }, [capturedPhotos, shotsPerStrip, handleRetake]);
 
   // Fill specific slots directly from the studio (upload, no camera needed)
   const handleFillSlots = useCallback((entries) => {
@@ -326,14 +356,17 @@ export default function App() {
               onSelectFrame={handleSelectFrame}
               allFrames={allFrames}
               retakeSlot={retakeSlot}
+              continueSession={continueSession}
               existingPhotos={capturedPhotos}
               onRetakeSlotHandled={() => setRetakeSlot(null)}
+              onContinueSessionHandled={() => setContinueSession(false)}
             />
           ) : (
             <StudioView
               photos={capturedPhotos}
               frames={allFrames}
               onRetake={handleRetake}
+              onAddPhotos={handleAddPhotos}
               onFillSlots={handleFillSlots}
               selectedFrameId={selectedFrameId}
               onSelectFrame={handleSelectFrame}

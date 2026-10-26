@@ -20,6 +20,7 @@ export default function StudioView({
   photos,
   selectedFrameId,
   onRetake,
+  onAddPhotos,
   onSelectFrame,
   shotsPerStrip,
   frames = [],
@@ -273,8 +274,18 @@ export default function StudioView({
     onRetake(-1);
   };
 
+  // Continue the strip: keep every photo we already have and capture into the
+  // slots that are still empty. (Previously this called onRetake(-1), which
+  // wipes the photos and restarts the whole session.)
+  const handleAddPhotosFromCamera = () => {
+    playClickSound();
+    if (onAddPhotos) onAddPhotos();
+    else onRetake(-1);
+  };
+
   // Get frame to know number of slots
   const slotCount = shotsPerStrip;
+  const filledSlots = photos.filter(Boolean).length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -464,12 +475,14 @@ export default function StudioView({
 
           <button
             type="button"
-            onClick={() => {
-              playClickSound();
-              onRetake(-1);
-            }}
-            className="nb-btn nb-btn-blue nb-btn-lg min-h-[52px]"
-            title="Ambil foto tambahan"
+            onClick={handleAddPhotosFromCamera}
+            disabled={filledSlots >= slotCount}
+            className="nb-btn nb-btn-blue nb-btn-lg min-h-[52px] disabled:opacity-50"
+            title={
+              filledSlots >= slotCount
+                ? 'Semua slot sudah terisi'
+                : 'Lanjutkan sesi: isi slot yang masih kosong'
+            }
           >
             <Camera size={18} aria-hidden="true" />
             <span>TAMBAH</span>

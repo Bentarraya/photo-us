@@ -8,3 +8,4 @@ certs/
 !.env.example
 *.log
 .DS_Store
+.npm-cache/
