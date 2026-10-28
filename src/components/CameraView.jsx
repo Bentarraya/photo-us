@@ -112,7 +112,7 @@ export default function CameraView({
   const [showTune, setShowTune] = useState(false);
   const [tuneParams, setTuneParams] = useState(null);
 
-  const allowedShots = currentFrame?.allowedShots || layout?.allowedShots || [1, 2, 3, 4, 6];
+  const allowedShots = currentFrame?.allowedShots || layout?.allowedShots || [1, 2, 3, 4, 5, 6];
   const [localShots, setLocalShots] = useState(shotsPerStrip || layout?.count || 4);
   const totalShots = shotsPerStrip ?? localShots;
   // How many slots are still empty - used by the "continue session" copy.
@@ -604,7 +604,7 @@ export default function CameraView({
         <span className="nb-label flex items-center gap-1">SHOTS PER STRIP:</span>
 
         <div className="nb-segmented" role="group" aria-label="Shots per strip selector">
-          {[1, 2, 3, 4, 6].map((num) => {
+          {[1, 2, 3, 4, 5, 6].map((num) => {
             const isAllowed = allowedShots.includes(num);
             const isSelected = totalShots === num;
 

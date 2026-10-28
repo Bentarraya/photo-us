@@ -150,5 +150,58 @@
         ]
       }
     }
+  },
+  {
+    "id": "receipt-us",
+    "name": "Receipt US",
+    "order": 5,
+    "type": "image",
+    "allowedShots": [
+      5
+    ],
+    "defaultShots": 5,
+    "pngFiles": {
+      "5": "/frames/receipt-us/5.png"
+    },
+    "underlay": null,
+    "meta": {
+      "name": "Receipt US",
+      "defaultShots": 5,
+      "order": 5,
+      "slots": {
+        "5": [
+          {
+            "x": 34,
+            "y": 500,
+            "w": 523,
+            "h": 323
+          },
+          {
+            "x": 34,
+            "y": 833,
+            "w": 523,
+            "h": 323
+          },
+          {
+            "x": 34,
+            "y": 1166,
+            "w": 523,
+            "h": 323
+          },
+          {
+            "x": 637,
+            "y": 39,
+            "w": 523,
+            "h": 615
+          },
+          {
+            "x": 637,
+            "y": 687,
+            "w": 523,
+            "h": 615
+          }
+        ]
+      }
+    }
   }
 ]

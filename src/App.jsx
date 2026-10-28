@@ -268,9 +268,9 @@ export default function App() {
     id: currentFrame.layout,
     name: currentFrame.name,
     count: shotsPerStrip,
-    allowedShots: currentFrame.allowedShots || [1, 2, 3, 4, 6],
+    allowedShots: currentFrame.allowedShots || [1, 2, 3, 4, 5, 6],
     defaultShots: currentFrame.defaultShots || 4
-  } : { name: 'Loading...', count: shotsPerStrip, allowedShots: [1,2,3,4,6], defaultShots: 4 };
+  } : { name: 'Loading...', count: shotsPerStrip, allowedShots: [1, 2, 3, 4, 5, 6], defaultShots: 4 };
 
   // Don't render until frames are loaded
   if (!framesLoaded) {

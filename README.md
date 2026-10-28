@@ -14,7 +14,7 @@ Web photobooth bertema **Neo Brutalism** yang berjalan langsung di browser HP ma
 - Dukungan kamera depan dan belakang.
 - Mode mirror untuk preview dan hasil jepretan.
 - Hitung mundur 3 detik, flash, dan suara kamera.
-- Sesi multi-shot: jumlah foto mengikuti frame yang dipilih. Kontrol menampilkan opsi 1, 2, 3, 4, dan 6; opsi yang tidak didukung frame otomatis nonaktif.
+- Sesi multi-shot: jumlah foto mengikuti frame yang dipilih. Kontrol menampilkan opsi 1–6; opsi yang tidak didukung frame otomatis nonaktif.
 - Retake satu slot tanpa menghapus foto lain.
 - Fallback **UPLOAD** dari galeri jika kamera tidak tersedia atau izin ditolak.
 - Panel diagnostik kamera tersembunyi lewat `?debug=1`.
@@ -38,7 +38,7 @@ Pipeline filter memakai WebGL dengan fallback Canvas 2D.
 
 ### 🖼️ Frame custom
 
-Saat ini aplikasi memakai **4 frame PNG custom** dari `public/frames/`:
+Saat ini aplikasi memakai **5 frame PNG custom** dari `public/frames/`:
 
 | Frame | Jumlah foto | File |
 |---|---:|---|
@@ -46,6 +46,7 @@ Saat ini aplikasi memakai **4 frame PNG custom** dari `public/frames/`:
 | Polca Maroon | 2 | `public/frames/polca-maroon/2.png` |
 | Retro Film | 3 | `public/frames/retro-film/3.png` |
 | Basic Polca | 4 | `public/frames/basic-polca/4.png` |
+| Receipt US | 5 | `public/frames/receipt-us/5.png` |
 
 Frame dipilih lewat modal picker. Setiap frame memiliki slot foto transparan dan metadata posisi di `meta.json`.
 
